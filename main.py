@@ -4,12 +4,20 @@ import pandas as pd
 
 conn = sqlite3.connect("data.sqlite")
 
+# CodeGrade step1
+df_boston = pd.read_sql("""
+SELECT e.firstName, e.lastName, e.jobTitle
+FROM employees e
+JOIN offices o ON e.officeCode = o.officeCode
+WHERE o.city = 'Boston'
+""", conn)
+
 # CodeGrade step2
 df_zero_emp = pd.read_sql("""
 SELECT o.officeCode, o.city
 FROM offices o
 LEFT JOIN employees e ON o.officeCode = e.officeCode
-GROUP BY o.officeCode
+GROUP BY o.officeCode, o.city
 HAVING COUNT(e.employeeNumber) = 0
 """, conn)
 
@@ -55,7 +63,7 @@ SELECT
     COUNT(c.customerNumber) AS num_customers
 FROM employees e
 JOIN customers c ON e.employeeNumber = c.salesRepEmployeeNumber
-GROUP BY e.employeeNumber
+GROUP BY e.employeeNumber, e.firstName, e.lastName
 HAVING AVG(c.creditLimit) > 90000
 ORDER BY num_customers DESC
 """, conn)
@@ -64,11 +72,11 @@ ORDER BY num_customers DESC
 df_product_sold = pd.read_sql("""
 SELECT 
     p.productName,
-    COUNT(o.orderNumber) AS numorders,
-    SUM(o.quantityOrdered) AS totalunits
+    COUNT(od.orderNumber) AS numorders,
+    SUM(od.quantityOrdered) AS totalunits
 FROM products p
-JOIN orderDetails o ON p.productCode = o.productCode
-GROUP BY p.productCode
+JOIN orderDetails od ON p.productCode = od.productCode
+GROUP BY p.productCode, p.productName
 ORDER BY totalunits DESC
 """, conn)
 
@@ -81,7 +89,7 @@ SELECT
 FROM products p
 JOIN orderDetails od ON p.productCode = od.productCode
 JOIN orders o ON od.orderNumber = o.orderNumber
-GROUP BY p.productCode
+GROUP BY p.productCode, p.productName
 ORDER BY numpurchasers DESC
 """, conn)
 
@@ -94,7 +102,7 @@ SELECT
 FROM offices o
 LEFT JOIN employees e ON o.officeCode = e.officeCode
 LEFT JOIN customers c ON e.employeeNumber = c.salesRepEmployeeNumber
-GROUP BY o.officeCode
+GROUP BY o.officeCode, o.city
 """, conn)
 
 # CodeGrade step10
@@ -117,4 +125,5 @@ WHERE od.productCode IN (
     GROUP BY od.productCode
     HAVING COUNT(DISTINCT o2.customerNumber) < 20
 )
+ORDER BY e.firstName
 """, conn)
