@@ -114,16 +114,21 @@ SELECT DISTINCT
     o.city,
     o.officeCode
 FROM employees e
-JOIN offices o ON e.officeCode = o.officeCode
-JOIN customers c ON e.employeeNumber = c.salesRepEmployeeNumber
-JOIN orders ord ON c.customerNumber = ord.customerNumber
-JOIN orderDetails od ON ord.orderNumber = od.orderNumber
+JOIN offices o
+    ON e.officeCode = o.officeCode
+JOIN customers c
+    ON e.employeeNumber = c.salesRepEmployeeNumber
+JOIN orders ord
+    ON c.customerNumber = ord.customerNumber
+JOIN orderDetails od
+    ON ord.orderNumber = od.orderNumber
 WHERE od.productCode IN (
-    SELECT od.productCode
-    FROM orderDetails od
-    JOIN orders o2 ON od.orderNumber = o2.orderNumber
-    GROUP BY od.productCode
-    HAVING COUNT(DISTINCT o2.customerNumber) < 20
+    SELECT od2.productCode
+    FROM orderDetails od2
+    JOIN orders ord2
+        ON od2.orderNumber = ord2.orderNumber
+    GROUP BY od2.productCode
+    HAVING COUNT(DISTINCT ord2.customerNumber) <= 20
 )
-ORDER BY e.firstName
+ORDER BY e.lastName, e.firstName, e.employeeNumber
 """, conn)
